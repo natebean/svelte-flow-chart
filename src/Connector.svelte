@@ -32,15 +32,17 @@
 
 <div bind:this={svgDiv}>
     <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        <path d={path} stroke="cornflowerblue" stroke-width="1px" />
+        <path d={path} stroke="cornflowerblue" stroke-width="3px" />
     </svg>
 </div>
 
 <style>
     svg {
         position: absolute;
+        display: block;
         height: 97%;
         width: 97%;
+        z-index: 100;
     }
     div {
         z-index: 100;
