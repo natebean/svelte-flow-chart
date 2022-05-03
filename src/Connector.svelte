@@ -18,7 +18,7 @@
     });
     // $: console.log("anchor ", anchor, anchorSet);
     // $: console.log("offsets ", offsetTop, offsetLeft);
-    $: console.log("Connector ID ", id);
+    // $: console.log("Connector ID ", id);
     $: path =
         "M" +
         (anchor.x - offsetLeft) +
