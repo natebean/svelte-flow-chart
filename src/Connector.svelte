@@ -42,9 +42,12 @@
         display: block;
         height: 97%;
         width: 97%;
-        z-index: 100;
+        z-index: -100;
+    }
+    path {
+        z-index: 300;
     }
     div {
-        z-index: 100;
+        z-index: -100;
     }
 </style>

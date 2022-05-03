@@ -53,9 +53,12 @@
     on:mouseup={handleUp}
 >
     <h1>Flow Chart Editor</h1>
-    The mouse position is {m.x} x {m.y}<br />
-    The anchor point is {startingAnchorPoint.x} x {startingAnchorPoint.y} <br />
-    Anchor is set {startingAnchorPointSet}
+    <div>
+        The mouse position is {m.x} x {m.y}<br />
+        The anchor point is {startingAnchorPoint.x} x {startingAnchorPoint.y}
+        <br />
+        Anchor is set {startingAnchorPointSet}
+    </div>
     {#if startingAnchorPointSet}
         <Connector anchor={startingAnchorPoint} endPoint={m} />
     {/if}
