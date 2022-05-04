@@ -84,6 +84,7 @@
         id={1}
         top={100}
         left={200}
+        title="First Machine"
         on:nodeMouseDown={handleNodeMouseDown}
         on:nodeMouseUp={handleNodeMouseUp}
     />
@@ -91,6 +92,8 @@
         id={2}
         top={100}
         left={500}
+        title="Second Machine"
+        on:nodeMouseDown={handleNodeMouseDown}
         on:nodeMouseUp={handleNodeMouseUp}
     />
 </div>

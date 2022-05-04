@@ -6,6 +6,7 @@
     export let id = "";
     export let top = 0;
     export let left = 0;
+    export let title = "Machine Node";
 
     let locationStyles = `top: ${top}px; left: ${left}px;`;
 
@@ -69,7 +70,7 @@
         </div>
         <div class="main-inner">
             <div class="header handle-drag">
-                <p>Machine Node</p>
+                <p>{title}</p>
             </div>
             <div class="main-body">Other stuff</div>
         </div>
