@@ -1,15 +1,17 @@
 <script>
-    import MachineNode from "./MachineNode.svelte";
+    import MachineNode from "./MachineBlock.svelte";
     import Connector from "./Connector.svelte";
-    let m = { x: 0, y: 0 };
+    let mousePosition = { x: 0, y: 0 };
     let startingAnchorPoint = { x: 0, y: 0 };
     let startingAnchorPointSet = false;
     let mouseDownOnNode = false;
     let downNode = {};
-    let upNode = {};
 
     let connectorList = [];
-    let machineNodeId = uuidv4();
+    let blockList = [
+        { id: uuidv4(), title: "Machine Node", left: 100, top: 100 },
+        { id: uuidv4(), title: "Machine Node", left: 400, top: 100 },
+    ];
 
     $: if (
         startingAnchorPoint.x > 0 &&
@@ -22,22 +24,52 @@
     }
 
     function handleMousemove(event) {
-        m = { x: event.clientX, y: event.clientY };
+        mousePosition = { x: event.clientX, y: event.clientY };
     }
 
     function handleDown(e) {
         startingAnchorPoint = { x: e.clientX, y: e.clientY };
     }
     function handleUp(e) {
-        if (startingAnchorPointSet) {
-            connectorCreated(startingAnchorPoint, m);
-        }
         mouseDownOnNode = false;
-        startingAnchorPoint = { x: 0, y: 0 };
     }
 
-    function connectorCreated(s, e) {
-        connectorList = [...connectorList, { start: s, end: e, id: uuidv4() }];
+    function connectorCreated(startNode, endNode) {
+        connectorList = [
+            ...connectorList,
+            {
+                id: uuidv4(),
+                startNode,
+                endNode,
+            },
+        ];
+        console.log("connectorList", connectorList);
+    }
+
+    function handleBlockDrag(e) {
+        // console.log("drag", e.detail);
+        const updatedConnectorList = connectorList.map((connector) => {
+            if (connector.startNode.blockId === e.detail.blockId) {
+                const outputs = e.detail.nodePositions.filter(
+                    (node) =>
+                        node.nodeType === "output" &&
+                        node.id === connector.startNode.nodeId
+                );
+                connector.startNode.position = outputs[0].position;
+                return connector;
+            } else if (connector.endNode.blockId === e.detail.blockId) {
+                const inputs = e.detail.nodePositions.filter(
+                    (node) =>
+                        node.nodeType === "input" &&
+                        node.id === connector.endNode.nodeId
+                );
+                connector.endNode.position = inputs[0].position;
+                return connector;
+            } else {
+                return connector;
+            }
+        });
+        connectorList = updatedConnectorList;
     }
 
     // https://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid
@@ -52,18 +84,23 @@
 
     function handleNodeMouseDown(e) {
         mouseDownOnNode = true;
-        console.log("Down ", e.detail);
+        downNode = e.detail;
+        // console.log("Down ", e.detail);
     }
 
     function handleNodeMouseUp(e) {
-        mouseDownOnNode = true;
-        console.log("Up ", e.detail);
+        // console.log("Up ", e.detail);
+        if (startingAnchorPointSet) {
+            connectorCreated(downNode, e.detail);
+        }
+        mouseDownOnNode = false;
+        startingAnchorPoint = { x: 0, y: 0 };
     }
 </script>
 
 <h1>Flow Chart Editor</h1>
 <div>
-    The mouse position is {m.x} x {m.y}<br />
+    The mouse position is {mousePosition.x} x {mousePosition.y}<br />
     The anchor point is {startingAnchorPoint.x} x {startingAnchorPoint.y}
     <br />
     Anchor is set {startingAnchorPointSet}
@@ -75,27 +112,26 @@
     on:mouseup={handleUp}
 >
     {#if startingAnchorPointSet}
-        <Connector anchor={startingAnchorPoint} endPoint={m} />
+        <Connector anchor={startingAnchorPoint} endPoint={mousePosition} />
     {/if}
     {#each connectorList as conn (conn.id)}
-        <Connector anchor={conn.start} endPoint={conn.end} id={conn.id} />
+        <Connector
+            anchor={conn.startNode.position}
+            endPoint={conn.endNode.position}
+            id={conn.id}
+        />
     {/each}
-    <MachineNode
-        id={1}
-        top={100}
-        left={200}
-        title="First Machine"
-        on:nodeMouseDown={handleNodeMouseDown}
-        on:nodeMouseUp={handleNodeMouseUp}
-    />
-    <MachineNode
-        id={2}
-        top={100}
-        left={500}
-        title="Second Machine"
-        on:nodeMouseDown={handleNodeMouseDown}
-        on:nodeMouseUp={handleNodeMouseUp}
-    />
+    {#each blockList as block (block.id)}
+        <MachineNode
+            id={block.id}
+            top={block.top}
+            left={block.left}
+            title={block.title}
+            on:nodeMouseDown={handleNodeMouseDown}
+            on:nodeMouseUp={handleNodeMouseUp}
+            on:blockDrag={handleBlockDrag}
+        />
+    {/each}
 </div>
 
 <style>

@@ -1,6 +1,7 @@
 <script>
     import { draggable } from "@neodrag/svelte";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import { blank_object, noop } from "svelte/internal";
     const dispatch = createEventDispatcher();
 
     export let id = "";
@@ -8,39 +9,72 @@
     export let left = 0;
     export let title = "Machine Node";
 
+    let blockRef;
+
+    $: blockId = `block-${id}`;
+    $: locationInfo = `${left}px ${top}px`;
+
     let locationStyles = `top: ${top}px; left: ${left}px;`;
 
     let options = {
         bounds: "parent",
         handle: ".handle-drag",
     };
-
-    function nodeMouseDownHandler(e) {
-        const anchorNodeType = e.target.getAttribute("data-node-type");
-        const anchorNodeId = e.target.getAttribute("data-node-id");
-        dispatch("nodeMouseDown", {
-            type: anchorNodeType,
-            id: anchorNodeId,
-            blockId: id,
-        });
-    }
-
-    function nodeMouseUpHandler(e) {
-        const anchorNodeType = e.target.getAttribute("data-node-type");
-        const anchorNodeId = e.target.getAttribute("data-node-id");
-        dispatch("nodeMouseUp", {
-            type: anchorNodeType,
-            id: anchorNodeId,
-            blockId: id,
-        });
-    }
     onMount(() => {
-        const divs = document.querySelectorAll(`#block-${id} .node`);
+        const divs = document.querySelectorAll(`#${blockId} .node`);
         divs.forEach((el) => {
             el.addEventListener("mousedown", nodeMouseDownHandler);
             el.addEventListener("mouseup", nodeMouseUpHandler);
         });
     });
+
+    function mouseHandler(e, type) {
+        const el = e.target;
+        const anchorNodeType = e.target.getAttribute("data-node-type");
+        const anchorNodeId = e.target.getAttribute("data-node-id");
+        var rect = blockRef.getBoundingClientRect();
+        const blockLeft = rect.left;
+        const blockTop = rect.top;
+        dispatch(type, {
+            type: anchorNodeType,
+            id: anchorNodeId,
+            blockId: id,
+            position: {
+                x: blockLeft + el.offsetLeft + el.offsetWidth / 2,
+                y: blockTop + el.offsetTop + el.offsetHeight / 2,
+            },
+        });
+    }
+
+    function nodeMouseDownHandler(e) {
+        mouseHandler(e, "nodeMouseDown");
+    }
+
+    function nodeMouseUpHandler(e) {
+        mouseHandler(e, "nodeMouseUp");
+    }
+    function dragHandler(e) {
+        const blockLeft = e.detail.domRect.left;
+        const blockTop = e.detail.domRect.top;
+        const divs = document.querySelectorAll(`#${blockId} .node`);
+        const nodePositions = Array.from(divs).map((el) => {
+            const anchorNodeType = el.getAttribute("data-node-type");
+            const anchorNodeId = el.getAttribute("data-node-id");
+            return {
+                blockId: id,
+                nodeId: anchorNodeId,
+                nodeType: anchorNodeType,
+                position: {
+                    x: blockLeft + el.offsetLeft + el.offsetWidth / 2,
+                    y: blockTop + el.offsetTop + el.offsetHeight / 2,
+                },
+            };
+        });
+        dispatch("blockDrag", {
+            blockId: id,
+            nodePositions: nodePositions,
+        });
+    }
 
     onDestroy(() => {
         // TODO Clean up destroy
@@ -54,11 +88,19 @@
     });
 </script>
 
+<!--
+    on:neodrag:start={(e) => console.log("Dragging started", e)}
+    on:neodrag={(e) => console.log(e.detail)}
+    on:neodrag:end={(e) => console.log("Dragging stopped", e)}
+    -->
+
 <div
-    id="block-{id}"
+    id={blockId}
     class="machine-node"
     use:draggable={options}
+    on:neodrag={dragHandler}
     style={locationStyles}
+    bind:this={blockRef}
 >
     <div class="wrapper">
         <div class="node-inputs node-wrapper">
@@ -72,7 +114,7 @@
             <div class="header handle-drag">
                 <p>{title}</p>
             </div>
-            <div class="main-body">Other stuff</div>
+            <div class="main-body">{locationInfo}</div>
         </div>
         <div class="node-outputs node-wrapper">
             <div
@@ -89,7 +131,6 @@
         width: fit-content;
         max-width: 350px;
         z-index: 1;
-        /* position: relative; */
         position: absolute;
     }
     .wrapper {
