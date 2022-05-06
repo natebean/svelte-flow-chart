@@ -1,9 +1,8 @@
 <script>
     import { onMount } from "svelte";
 
-    export let anchor = { x: 10, y: 10 };
+    export let startPoint = { x: 10, y: 10 };
     export let endPoint = { x: 20, y: 20 };
-    export let id = "";
 
     let offsetLeft = 0;
     let offsetTop = 0;
@@ -11,19 +10,15 @@
     let svgDiv;
 
     onMount(() => {
-        // console.log("bounding ", svgDiv.getBoundingClientRect());
         let rect = svgDiv.getBoundingClientRect();
         offsetTop = rect.y;
         offsetLeft = rect.x;
     });
-    // $: console.log("anchor ", anchor, anchorSet);
-    // $: console.log("offsets ", offsetTop, offsetLeft);
-    // $: console.log("Connector ID ", id);
     $: path =
         "M" +
-        (anchor.x - offsetLeft) +
+        (startPoint.x - offsetLeft) +
         " " +
-        (anchor.y - offsetTop) +
+        (startPoint.y - offsetTop) +
         " L" +
         (endPoint.x - offsetLeft) +
         " " +

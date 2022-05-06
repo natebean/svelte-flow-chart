@@ -1,7 +1,6 @@
 <script>
     import { draggable } from "@neodrag/svelte";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
-    import { blank_object, noop } from "svelte/internal";
     const dispatch = createEventDispatcher();
 
     export let id = "";
@@ -87,12 +86,6 @@
         );
     });
 </script>
-
-<!--
-    on:neodrag:start={(e) => console.log("Dragging started", e)}
-    on:neodrag={(e) => console.log(e.detail)}
-    on:neodrag:end={(e) => console.log("Dragging stopped", e)}
-    -->
 
 <div
     id={blockId}

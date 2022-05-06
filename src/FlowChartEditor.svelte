@@ -2,52 +2,51 @@
     import MachineNode from "./MachineBlock.svelte";
     import Connector from "./Connector.svelte";
     let mousePosition = { x: 0, y: 0 };
-    let startingAnchorPoint = { x: 0, y: 0 };
-    let startingAnchorPointSet = false;
     let mouseDownOnNode = false;
-    let downNode = {};
+    let downNode = { position: { x: 0, y: 0 } };
 
     let connectorList = [];
     let blockList = [
-        { id: uuidv4(), title: "Machine Node", left: 100, top: 100 },
-        { id: uuidv4(), title: "Machine Node", left: 400, top: 100 },
+        { id: uuidv4(), title: "Machine Node 1", left: 100, top: 100 },
+        { id: uuidv4(), title: "Machine Node 2", left: 400, top: 100 },
+        { id: uuidv4(), title: "Machine Node 3", left: 800, top: 100 },
     ];
-
-    $: if (
-        startingAnchorPoint.x > 0 &&
-        startingAnchorPoint.y > 0 &&
-        mouseDownOnNode
-    ) {
-        startingAnchorPointSet = true;
-    } else {
-        startingAnchorPointSet = false;
-    }
 
     function handleMousemove(event) {
         mousePosition = { x: event.clientX, y: event.clientY };
     }
 
-    function handleDown(e) {
-        startingAnchorPoint = { x: e.clientX, y: e.clientY };
-    }
     function handleUp(e) {
         mouseDownOnNode = false;
     }
 
+    function handleNodeMouseDown(e) {
+        mouseDownOnNode = true;
+        downNode = e.detail;
+    }
+
+    function handleNodeMouseUp(e) {
+        if (mouseDownOnNode) {
+            connectorCreated(downNode, e.detail);
+        }
+        mouseDownOnNode = false;
+    }
+
     function connectorCreated(startNode, endNode) {
-        connectorList = [
-            ...connectorList,
-            {
-                id: uuidv4(),
-                startNode,
-                endNode,
-            },
-        ];
-        console.log("connectorList", connectorList);
+        if (startNode.type === "output" && endNode.type === "input") {
+            connectorList = [
+                ...connectorList,
+                {
+                    id: uuidv4(),
+                    startNode,
+                    endNode,
+                },
+            ];
+        }
+        // console.log("ConnectorList", connectorList);
     }
 
     function handleBlockDrag(e) {
-        // console.log("drag", e.detail);
         const updatedConnectorList = connectorList.map((connector) => {
             if (connector.startNode.blockId === e.detail.blockId) {
                 const outputs = e.detail.nodePositions.filter(
@@ -81,44 +80,27 @@
             ).toString(16)
         );
     }
-
-    function handleNodeMouseDown(e) {
-        mouseDownOnNode = true;
-        downNode = e.detail;
-        // console.log("Down ", e.detail);
-    }
-
-    function handleNodeMouseUp(e) {
-        // console.log("Up ", e.detail);
-        if (startingAnchorPointSet) {
-            connectorCreated(downNode, e.detail);
-        }
-        mouseDownOnNode = false;
-        startingAnchorPoint = { x: 0, y: 0 };
-    }
 </script>
 
 <h1>Flow Chart Editor</h1>
 <div>
     The mouse position is {mousePosition.x} x {mousePosition.y}<br />
-    The anchor point is {startingAnchorPoint.x} x {startingAnchorPoint.y}
+    The anchor point is {downNode.position.x} x {downNode.position.y}
     <br />
-    Anchor is set {startingAnchorPointSet}
+    Anchor is set {mouseDownOnNode}
 </div>
 <div
     class="flow-chart-editor"
     on:mousemove={handleMousemove}
-    on:mousedown={handleDown}
     on:mouseup={handleUp}
 >
-    {#if startingAnchorPointSet}
-        <Connector anchor={startingAnchorPoint} endPoint={mousePosition} />
+    {#if mouseDownOnNode}
+        <Connector startPoint={downNode.position} endPoint={mousePosition} />
     {/if}
     {#each connectorList as conn (conn.id)}
         <Connector
-            anchor={conn.startNode.position}
+            startPoint={conn.startNode.position}
             endPoint={conn.endNode.position}
-            id={conn.id}
         />
     {/each}
     {#each blockList as block (block.id)}
